@@ -1,0 +1,61 @@
+{
+  "dataset": "MSEC / Learning Multi-Scale Photo Exposure Correction",
+  "split": "testing.zip",
+  "task": "3-way exposure direction (EV suffix labels grouped as under / well / over)",
+  "method": "Existing explainable image-statistics baseline in app.py; no model training",
+  "evaluated_images": 5905,
+  "skipped_images": 0,
+  "ev_level_counts": {
+    "0": 1181,
+    "N1": 1181,
+    "N1.5": 1181,
+    "P1": 1181,
+    "P1.5": 1181
+  },
+  "label_order": [
+    "Underexposed",
+    "Well Exposed",
+    "Overexposed"
+  ],
+  "confusion_matrix_actual_rows_predicted_columns": [
+    [
+      2091,
+      261,
+      10
+    ],
+    [
+      501,
+      606,
+      74
+    ],
+    [
+      189,
+      1095,
+      1078
+    ]
+  ],
+  "accuracy": 0.6392887383573242,
+  "balanced_accuracy": 0.6182613604290149,
+  "macro_f1": 0.6035225607161606,
+  "per_class": {
+    "Underexposed": {
+      "precision": 0.7518878101402373,
+      "recall": 0.8852667231160034,
+      "f1": 0.8131440793311298,
+      "support": 2362
+    },
+    "Well Exposed": {
+      "precision": 0.308868501529052,
+      "recall": 0.5131244707874683,
+      "f1": 0.38561883550747694,
+      "support": 1181
+    },
+    "Overexposed": {
+      "precision": 0.927710843373494,
+      "recall": 0.45639288738357325,
+      "f1": 0.6118047673098751,
+      "support": 2362
+    }
+  },
+  "errors": []
+}

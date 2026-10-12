@@ -1,0 +1,130 @@
+{
+  "dataset": "MSEC \u2014 Learning Multi-Scale Photo Exposure Correction",
+  "label_definition": {
+    "Underexposed": [
+      "-1 EV",
+      "-1.5 EV"
+    ],
+    "Well Exposed": [
+      "0 EV"
+    ],
+    "Overexposed": [
+      "+1 EV",
+      "+1.5 EV"
+    ]
+  },
+  "model": "OpenCV Random Forest (RTrees), 11 image-statistics features",
+  "training_images": 17675,
+  "validation_images": 750,
+  "test_images": 5905,
+  "exposure_level_counts": {
+    "training": {
+      "0": 3535,
+      "N1": 3535,
+      "N1.5": 3535,
+      "P1": 3535,
+      "P1.5": 3535
+    },
+    "validation": {
+      "0": 150,
+      "N1": 150,
+      "N1.5": 150,
+      "P1": 150,
+      "P1.5": 150
+    },
+    "testing": {
+      "0": 1181,
+      "N1": 1181,
+      "N1.5": 1181,
+      "P1": 1181,
+      "P1.5": 1181
+    }
+  },
+  "validation": {
+    "accuracy": 0.7426666666666667,
+    "balanced_accuracy": 0.6666666666666666,
+    "macro_f1": 0.6635541698080285,
+    "confusion_matrix_actual_rows_predicted_columns": [
+      [
+        263,
+        17,
+        20
+      ],
+      [
+        64,
+        43,
+        43
+      ],
+      [
+        21,
+        28,
+        251
+      ]
+    ],
+    "per_class": {
+      "Underexposed": {
+        "precision": 0.7557471264367817,
+        "recall": 0.8766666666666667,
+        "f1": 0.8117283950617284,
+        "support": 300
+      },
+      "Well Exposed": {
+        "precision": 0.48863636363636365,
+        "recall": 0.2866666666666667,
+        "f1": 0.361344537815126,
+        "support": 150
+      },
+      "Overexposed": {
+        "precision": 0.7993630573248408,
+        "recall": 0.8366666666666667,
+        "f1": 0.8175895765472313,
+        "support": 300
+      }
+    }
+  },
+  "test": {
+    "accuracy": 0.7453005927180356,
+    "balanced_accuracy": 0.6651143099068587,
+    "macro_f1": 0.6598084689761112,
+    "confusion_matrix_actual_rows_predicted_columns": [
+      [
+        2105,
+        147,
+        110
+      ],
+      [
+        469,
+        312,
+        400
+      ],
+      [
+        175,
+        203,
+        1984
+      ]
+    ],
+    "per_class": {
+      "Underexposed": {
+        "precision": 0.7657329938159331,
+        "recall": 0.8911939034716342,
+        "f1": 0.8237135589904129,
+        "support": 2362
+      },
+      "Well Exposed": {
+        "precision": 0.47129909365558914,
+        "recall": 0.26418289585097376,
+        "f1": 0.33857840477482365,
+        "support": 1181
+      },
+      "Overexposed": {
+        "precision": 0.7955092221331195,
+        "recall": 0.8399661303979679,
+        "f1": 0.8171334431630971,
+        "support": 2362
+      }
+    }
+  },
+  "test_is_held_out_scene_split": true,
+  "model_file": "models/msec_exposure_direction.xml",
+  "interpretation": "These scores measure 3-way exposure direction on MSEC EV-shifted images. They are not accuracy for the app\u2019s seven severity categories or a guarantee for arbitrary real-world photos."
+}

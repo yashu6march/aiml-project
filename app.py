@@ -6,6 +6,7 @@ import os
 import secrets
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import cv2
@@ -20,6 +21,50 @@ CATEGORIES = [
     'Severe Underexposed', 'Moderate Underexposed', 'Mild Underexposed',
     'Well Exposed', 'Mild Overexposed', 'Moderate Overexposed', 'Severe Overexposed'
 ]
+ML_DIRECTIONS = ['Underexposed', 'Well Exposed', 'Overexposed']
+ML_MODEL_PATH = Path(__file__).parent / 'models' / 'msec_exposure_direction.xml'
+_exposure_model = cv2.ml.RTrees_load(str(ML_MODEL_PATH)) if ML_MODEL_PATH.exists() else None
+
+
+def exposure_feature_vector(rgb: np.ndarray) -> np.ndarray:
+    """Compact, interpretable features shared by MSEC training and app inference."""
+    bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+    gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+    channel_means = np.mean(rgb, axis=(0, 1))
+    p10, p50, p90 = [float(v) for v in np.percentile(gray, [10, 50, 90])]
+    values = [
+        float(np.mean(gray)), float(np.std(gray)), p10, p50, p90,
+        float(np.mean(gray < 32) * 100), float(np.mean(gray > 235) * 100),
+        float(np.mean(hsv[:, :, 1]) / 255 * 100),
+        float(channel_means[0]), float(channel_means[1]), float(channel_means[2]),
+    ]
+    return np.asarray(values, dtype=np.float32).reshape(1, -1)
+
+
+def predict_exposure_direction(rgb: np.ndarray) -> dict[str, Any] | None:
+    """Return the optional trained 3-way MSEC prediction and tree vote share."""
+    if _exposure_model is None:
+        return None
+    features = exposure_feature_vector(rgb)
+    _, response = _exposure_model.predict(features)
+    class_id = int(round(float(response[0, 0])))
+    confidence = None
+    try:
+        votes = _exposure_model.getVotes(features, 0)
+        class_ids = [int(round(float(value))) for value in votes[0]]
+        counts = votes[1].astype(np.float64).reshape(-1)
+        if class_id in class_ids and counts.sum() > 0:
+            confidence = round(float(counts[class_ids.index(class_id)] / counts.sum()), 3)
+    except (cv2.error, IndexError, ValueError):
+        pass
+    if not 0 <= class_id < len(ML_DIRECTIONS):
+        return None
+    return {
+        'label': ML_DIRECTIONS[class_id],
+        'vote_share': confidence,
+        'confidence_note': 'Random-forest vote share; not a calibrated probability',
+    }
 
 
 def load_image(file_bytes: bytes) -> np.ndarray:
@@ -122,6 +167,7 @@ def analyze(rgb: np.ndarray) -> dict[str, Any]:
         'dynamic_range_label': 'Wide' if dynamic_range > 150 else 'Moderate' if dynamic_range > 85 else 'Low',
     }
     category, confidence, score = classify_exposure(gray, metrics)
+    ml_direction = predict_exposure_direction(rgb)
     rgb_hist = {}
     for name, channel in zip(['red', 'green', 'blue'], cv2.split(bgr)[::-1]):
         channel_hist = cv2.calcHist([channel], [0], None, [48], [0, 256]).flatten()
@@ -158,6 +204,7 @@ def analyze(rgb: np.ndarray) -> dict[str, Any]:
         raise ValueError('Could not encode the enhanced image.')
     return {
         'category': category, 'confidence': confidence, 'confidence_label': 'boundary-margin estimate',
+        'ml_direction': ml_direction,
         'score': score, 'metrics': metrics, 'histogram': hist, 'rgb_histogram': rgb_hist,
         'recommendations': recommendations, 'width': width, 'height': height,
         'enhanced_image': 'data:image/jpeg;base64,' + base64.b64encode(encoded.tobytes()).decode('ascii'),
